@@ -26,28 +26,26 @@ void fullAdder(int a, int b, int cin, int &sum, int &carry) {
 
 /* ================= RIPPLE CARRY ADDER ================= */
 
-void rippleCarryAdder(int A[], int B[], int n, int result[]) {
+void rippleCarryAdder(int A[], int B[], int n, int result[], int &finalCarry) {
     int carry = 0;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
         fullAdder(A[i], B[i], carry, result[i], carry);
-    }
+    finalCarry = carry;
 }
 
 /* ================= SUBTRACTOR ================= */
 
-void rippleCarrySubtractor(int A[], int B[], int n, int result[]) {
+void rippleCarrySubtractor(int A[], int B[], int n, int result[], int &finalCarry) {
     int B_comp[32];
 
-    // Invert B
     for (int i = 0; i < n; i++)
         B_comp[i] = NOT(B[i]);
 
-    // Add 1 (2's complement)
     int carry = 1;
     for (int i = 0; i < n; i++)
         fullAdder(B_comp[i], 0, carry, B_comp[i], carry);
 
-    rippleCarryAdder(A, B_comp, n, result);
+    rippleCarryAdder(A, B_comp, n, result, finalCarry);
 }
 
 /* ================= MULTI-BIT LOGIC OPS ================= */
@@ -67,14 +65,80 @@ void bitwiseXOR(int A[], int B[], int n, int result[]) {
         result[i] = XOR(A[i], B[i]);
 }
 
-/* ================= ALU ================= */
+/* ================= FLAGS ================= */
 
-void ALU() {
+bool zeroFlag(int result[], int n) {
+    for (int i = 0; i < n; i++)
+        if (result[i] != 0)
+            return false;
+    return true;
+}
+
+bool negativeFlag(int result[], int n) {
+    return result[n - 1] == 1;
+}
+
+bool overflowFlag(int A[], int B[], int result[], int n) {
+    return (A[n - 1] == B[n - 1]) && (result[n - 1] != A[n - 1]);
+}
+
+/* ================= USER HELPERS ================= */
+
+void userRippleAdder() {
     int n;
-    cout << "\nEnter number of bits: ";
+    cout << "Enter number of bits: ";
     cin >> n;
 
     int A[32], B[32], result[32];
+    int carry;
+
+    cout << "Enter bits for A (LSB first): ";
+    for (int i = 0; i < n; i++)
+        cin >> A[i];
+
+    cout << "Enter bits for B (LSB first): ";
+    for (int i = 0; i < n; i++)
+        cin >> B[i];
+
+    rippleCarryAdder(A, B, n, result, carry);
+
+    cout << "Result: ";
+    for (int i = n - 1; i >= 0; i--)
+        cout << result[i];
+    cout << "\nCarry Out: " << carry << endl;
+}
+
+void userSubtractor() {
+    int n;
+    cout << "Enter number of bits: ";
+    cin >> n;
+
+    int A[32], B[32], result[32];
+    int carry;
+
+    cout << "Enter bits for A (LSB first): ";
+    for (int i = 0; i < n; i++)
+        cin >> A[i];
+
+    cout << "Enter bits for B (LSB first): ";
+    for (int i = 0; i < n; i++)
+        cin >> B[i];
+
+    rippleCarrySubtractor(A, B, n, result, carry);
+
+    cout << "Result (A - B): ";
+    for (int i = n - 1; i >= 0; i--)
+        cout << result[i];
+    cout << endl;
+}
+
+void ALU() {
+    int n;
+    cout << "Enter number of bits: ";
+    cin >> n;
+
+    int A[32], B[32], result[32];
+    int finalCarry = 0;
 
     cout << "Enter bits for A (LSB first): ";
     for (int i = 0; i < n; i++)
@@ -85,41 +149,27 @@ void ALU() {
         cin >> B[i];
 
     cout << "\nSelect Operation:\n";
-    cout << "1. ADD\n";
-    cout << "2. SUBTRACT\n";
-    cout << "3. AND\n";
-    cout << "4. OR\n";
-    cout << "5. XOR\n";
-    cout << "Choice: ";
-
+    cout << "1. ADD\n2. SUBTRACT\n3. AND\n4. OR\n5. XOR\nChoice: ";
     int op;
     cin >> op;
 
     switch (op) {
-        case 1:
-            rippleCarryAdder(A, B, n, result);
-            break;
-        case 2:
-            rippleCarrySubtractor(A, B, n, result);
-            break;
-        case 3:
-            bitwiseAND(A, B, n, result);
-            break;
-        case 4:
-            bitwiseOR(A, B, n, result);
-            break;
-        case 5:
-            bitwiseXOR(A, B, n, result);
-            break;
-        default:
-            cout << "Invalid operation.\n";
-            return;
+        case 1: rippleCarryAdder(A, B, n, result, finalCarry); break;
+        case 2: rippleCarrySubtractor(A, B, n, result, finalCarry); break;
+        case 3: bitwiseAND(A, B, n, result); break;
+        case 4: bitwiseOR(A, B, n, result); break;
+        case 5: bitwiseXOR(A, B, n, result); break;
+        default: cout << "Invalid operation\n"; return;
     }
 
-    cout << "\nResult: ";
+    cout << "Result: ";
     for (int i = n - 1; i >= 0; i--)
         cout << result[i];
-    cout << endl;
+
+    cout << "\nZero: " << zeroFlag(result, n);
+    cout << "\nNegative: " << negativeFlag(result, n);
+    cout << "\nOverflow: " << overflowFlag(A, B, result, n);
+    cout << "\nCarry: " << finalCarry << endl;
 }
 
 /* ================= MAIN MENU ================= */
@@ -133,49 +183,41 @@ int main() {
         cout << "2. Full Adder\n";
         cout << "3. Ripple Carry Adder\n";
         cout << "4. Binary Subtractor\n";
-        cout << "5. ALU\n";
+        cout << "5. ALU (with flags)\n";
         cout << "6. Exit\n";
         cout << "Choose option: ";
         cin >> choice;
 
         if (choice == 1) {
             int a, b, sum, carry;
-            cout << "Enter A (0 or 1): ";
+            cout << "Enter A: ";
             cin >> a;
-            cout << "Enter B (0 or 1): ";
+            cout << "Enter B: ";
             cin >> b;
             halfAdder(a, b, sum, carry);
-            cout << "Sum: " << sum << endl;
-            cout << "Carry: " << carry << endl;
+            cout << "Sum: " << sum << "\nCarry: " << carry << endl;
         }
         else if (choice == 2) {
             int a, b, cin, sum, carry;
-            cout << "Enter A (0 or 1): ";
+            cout << "Enter A: ";
             cin >> a;
-            cout << "Enter B (0 or 1): ";
+            cout << "Enter B: ";
             cin >> b;
-            cout << "Enter Carry In (0 or 1): ";
+            cout << "Enter Carry In: ";
             cin >> cin;
             fullAdder(a, b, cin, sum, carry);
-            cout << "Sum: " << sum << endl;
-            cout << "Carry Out: " << carry << endl;
+            cout << "Sum: " << sum << "\nCarry Out: " << carry << endl;
         }
-        else if (choice == 3) {
-            ALU(); // reuse ALU for addition
-        }
-        else if (choice == 4) {
-            ALU(); // reuse ALU for subtraction
-        }
-        else if (choice == 5) {
+        else if (choice == 3)
+            userRippleAdder();
+        else if (choice == 4)
+            userSubtractor();
+        else if (choice == 5)
             ALU();
-        }
-        else if (choice == 6) {
-            cout << "Exiting...\n";
+        else if (choice == 6)
             break;
-        }
-        else {
-            cout << "Invalid choice.\n";
-        }
+        else
+            cout << "Invalid choice\n";
     }
 
     return 0;
