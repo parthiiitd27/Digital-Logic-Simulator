@@ -1,135 +1,120 @@
 #include <iostream>
-#include <string>
-
 using namespace std;
 
-/* ===========================
-   HALF ADDER
-=========================== */
-void halfAdder() {
-    int A, B;
+/* ================= BASIC GATES ================= */
 
-    cout << "\n--- Half Adder ---\n";
-    cout << "Enter A (0 or 1): ";
-    cin >> A;
-    cout << "Enter B (0 or 1): ";
-    cin >> B;
+int AND(int a, int b) { return a & b; }
+int OR(int a, int b) { return a | b; }
+int XOR(int a, int b) { return a ^ b; }
 
-    if ((A != 0 && A != 1) || (B != 0 && B != 1)) {
-        cout << "Invalid input! Only 0 or 1 allowed.\n";
-        return;
-    }
+/* ================= HALF ADDER ================= */
 
-    int sum = A ^ B;
-    int carry = A & B;
-
-    cout << "Sum: " << sum << endl;
-    cout << "Carry: " << carry << endl;
+void halfAdder(int a, int b, int &sum, int &carry) {
+    sum = XOR(a, b);
+    carry = AND(a, b);
 }
 
-/* ===========================
-   FULL ADDER
-=========================== */
-void fullAdder() {
-    int A, B, Cin;
+/* ================= FULL ADDER ================= */
 
-    cout << "\n--- Full Adder ---\n";
-    cout << "Enter A (0 or 1): ";
-    cin >> A;
-    cout << "Enter B (0 or 1): ";
-    cin >> B;
-    cout << "Enter Carry In (0 or 1): ";
-    cin >> Cin;
+void fullAdder(int a, int b, int cin, int &sum, int &carry) {
+    int s1, c1, c2;
 
-    if ((A != 0 && A != 1) ||
-        (B != 0 && B != 1) ||
-        (Cin != 0 && Cin != 1)) {
-        cout << "Invalid input! Only 0 or 1 allowed.\n";
-        return;
-    }
-
-    int sum = A ^ B ^ Cin;
-    int carry = (A & B) | (Cin & (A ^ B));
-
-    cout << "Sum: " << sum << endl;
-    cout << "Carry: " << carry << endl;
+    halfAdder(a, b, s1, c1);
+    halfAdder(s1, cin, sum, c2);
+    carry = OR(c1, c2);
 }
 
-/* ===========================
-   RIPPLE CARRY ADDER
-=========================== */
+/* ================= RIPPLE CARRY ADDER ================= */
+
 void rippleCarryAdder() {
-    string A, B;
+    int n;
 
-    cout << "\n--- Ripple Carry Adder ---\n";
-    cout << "Enter first binary number: ";
-    cin >> A;
-    cout << "Enter second binary number: ";
-    cin >> B;
+    cout << "\nEnter number of bits: ";
+    cin >> n;
 
-    // Make both same length
-    while (A.length() < B.length())
-        A = "0" + A;
-
-    while (B.length() < A.length())
-        B = "0" + B;
-
-    int n = A.length();
-    string result = "";
+    int A[32], B[32];
+    int sum[32];
     int carry = 0;
 
-    for (int i = n - 1; i >= 0; i--) {
-        if ((A[i] != '0' && A[i] != '1') ||
-            (B[i] != '0' && B[i] != '1')) {
-            cout << "Invalid binary number!\n";
-            return;
-        }
+    cout << "Enter bits for A (LSB first): ";
+    for (int i = 0; i < n; i++)
+        cin >> A[i];
 
-        int a = A[i] - '0';
-        int b = B[i] - '0';
+    cout << "Enter bits for B (LSB first): ";
+    for (int i = 0; i < n; i++)
+        cin >> B[i];
 
-        int sum = a ^ b ^ carry;
-        carry = (a & b) | (carry & (a ^ b));
-
-        result = char(sum + '0') + result;
+    for (int i = 0; i < n; i++) {
+        fullAdder(A[i], B[i], carry, sum[i], carry);
     }
 
-    if (carry)
-        result = "1" + result;
+    cout << "\nResult: ";
+    for (int i = n - 1; i >= 0; i--)
+        cout << sum[i];
 
-    cout << "Result: " << result << endl;
+    cout << "\nFinal Carry: " << carry << endl;
 }
 
-/* ===========================
-   MAIN MENU
-=========================== */
+/* ================= MAIN MENU ================= */
+
 int main() {
     int choice;
 
     while (true) {
         cout << "\n========== Logic Simulator ==========\n";
-        cout << "1. Half Adder\n";
-        cout << "2. Full Adder\n";
-        cout << "3. Ripple Carry Adder\n";
-        cout << "4. Exit\n";
+        cout << "1. Basic AND-OR Circuit\n";
+        cout << "2. Half Adder\n";
+        cout << "3. Full Adder\n";
+        cout << "4. Ripple Carry Adder\n";
+        cout << "5. Exit\n";
         cout << "Choose option: ";
         cin >> choice;
 
-        switch (choice) {
-            case 1:
-                halfAdder();
-                break;
-            case 2:
-                fullAdder();
-                break;
-            case 3:
-                rippleCarryAdder();
-                break;
-            case 4:
-                cout << "Exiting...\n";
-                return 0;
-            default:
-                cout << "Invalid option. Try again.\n";
+        if (choice == 1) {
+            int a, b;
+            cout << "Enter A (0 or 1): ";
+            cin >> a;
+            cout << "Enter B (0 or 1): ";
+            cin >> b;
+            cout << "AND: " << AND(a, b) << endl;
+            cout << "OR: " << OR(a, b) << endl;
+        }
+
+        else if (choice == 2) {
+            int a, b, sum, carry;
+            cout << "Enter A (0 or 1): ";
+            cin >> a;
+            cout << "Enter B (0 or 1): ";
+            cin >> b;
+            halfAdder(a, b, sum, carry);
+            cout << "Sum: " << sum << endl;
+            cout << "Carry: " << carry << endl;
+        }
+
+        else if (choice == 3) {
+            int a, b, cin, sum, carry;
+            cout << "Enter A (0 or 1): ";
+            cin >> a;
+            cout << "Enter B (0 or 1): ";
+            cin >> b;
+            cout << "Enter Carry In (0 or 1): ";
+            cin >> cin;
+            fullAdder(a, b, cin, sum, carry);
+            cout << "Sum: " << sum << endl;
+            cout << "Carry Out: " << carry << endl;
+        }
+
+        else if (choice == 4) {
+            rippleCarryAdder();
+        }
+
+        else if (choice == 5) {
+            cout << "Exiting...\n";
+            break;
+        }
+
+        else {
+            cout << "Invalid choice.\n";
         }
     }
 
