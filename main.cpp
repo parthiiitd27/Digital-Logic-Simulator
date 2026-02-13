@@ -1,115 +1,131 @@
 #include <iostream>
+#include <string>
+
 using namespace std;
 
-/* ---------- Safe Input Function ---------- */
-int getBitInput(string name) {
-    int value;
-
-    while (true) {
-        cout << "Enter " << name << " (0 or 1): ";
-        cin >> value;
-
-        if (cin.fail() || (value != 0 && value != 1)) {
-            cin.clear();
-            cin.ignore(1000, '\n');
-            cout << "Invalid input. Please enter ONLY 0 or 1.\n";
-        } else {
-            return value;
-        }
-    }
-}
-
-/* ---------- Basic AND-OR Circuit ---------- */
-void basicCircuit() {
-    int A = getBitInput("A");
-    int B = getBitInput("B");
-
-    int C = A & B;
-    int D = C | B;
-
-    cout << "\n--- Circuit Output ---\n";
-    cout << "A = " << A << endl;
-    cout << "B = " << B << endl;
-    cout << "C (A AND B) = " << C << endl;
-    cout << "D (C OR B) = " << D << endl;
-}
-
-/* ---------- Half Adder ---------- */
+/* ===========================
+   HALF ADDER
+=========================== */
 void halfAdder() {
-    int A = getBitInput("A");
-    int B = getBitInput("B");
+    int A, B;
 
-    int Sum = A ^ B;
-    int Carry = A & B;
+    cout << "\n--- Half Adder ---\n";
+    cout << "Enter A (0 or 1): ";
+    cin >> A;
+    cout << "Enter B (0 or 1): ";
+    cin >> B;
 
-    cout << "\n--- Half Adder Output ---\n";
-    cout << "Sum: " << Sum << endl;
-    cout << "Carry: " << Carry << endl;
+    if ((A != 0 && A != 1) || (B != 0 && B != 1)) {
+        cout << "Invalid input! Only 0 or 1 allowed.\n";
+        return;
+    }
+
+    int sum = A ^ B;
+    int carry = A & B;
+
+    cout << "Sum: " << sum << endl;
+    cout << "Carry: " << carry << endl;
 }
 
-/* ---------- Full Adder ---------- */
+/* ===========================
+   FULL ADDER
+=========================== */
 void fullAdder() {
-    int A = getBitInput("A");
-    int B = getBitInput("B");
-    int Cin = getBitInput("Cin");
+    int A, B, Cin;
 
-    int Sum = A ^ B ^ Cin;
-    int Cout = (A & B) | (B & Cin) | (A & Cin);
+    cout << "\n--- Full Adder ---\n";
+    cout << "Enter A (0 or 1): ";
+    cin >> A;
+    cout << "Enter B (0 or 1): ";
+    cin >> B;
+    cout << "Enter Carry In (0 or 1): ";
+    cin >> Cin;
 
-    cout << "\n--- Full Adder Output ---\n";
-    cout << "Sum: " << Sum << endl;
-    cout << "Carry Out: " << Cout << endl;
+    if ((A != 0 && A != 1) ||
+        (B != 0 && B != 1) ||
+        (Cin != 0 && Cin != 1)) {
+        cout << "Invalid input! Only 0 or 1 allowed.\n";
+        return;
+    }
+
+    int sum = A ^ B ^ Cin;
+    int carry = (A & B) | (Cin & (A ^ B));
+
+    cout << "Sum: " << sum << endl;
+    cout << "Carry: " << carry << endl;
 }
 
-/* ---------- XOR Gate ---------- */
-void xorGate() {
-    int A = getBitInput("A");
-    int B = getBitInput("B");
+/* ===========================
+   RIPPLE CARRY ADDER
+=========================== */
+void rippleCarryAdder() {
+    string A, B;
 
-    int result = A ^ B;
+    cout << "\n--- Ripple Carry Adder ---\n";
+    cout << "Enter first binary number: ";
+    cin >> A;
+    cout << "Enter second binary number: ";
+    cin >> B;
 
-    cout << "\n--- XOR Gate Output ---\n";
-    cout << "Output: " << result << endl;
+    // Make both same length
+    while (A.length() < B.length())
+        A = "0" + A;
+
+    while (B.length() < A.length())
+        B = "0" + B;
+
+    int n = A.length();
+    string result = "";
+    int carry = 0;
+
+    for (int i = n - 1; i >= 0; i--) {
+        if ((A[i] != '0' && A[i] != '1') ||
+            (B[i] != '0' && B[i] != '1')) {
+            cout << "Invalid binary number!\n";
+            return;
+        }
+
+        int a = A[i] - '0';
+        int b = B[i] - '0';
+
+        int sum = a ^ b ^ carry;
+        carry = (a & b) | (carry & (a ^ b));
+
+        result = char(sum + '0') + result;
+    }
+
+    if (carry)
+        result = "1" + result;
+
+    cout << "Result: " << result << endl;
 }
 
-/* ---------- MAIN MENU ---------- */
+/* ===========================
+   MAIN MENU
+=========================== */
 int main() {
-
     int choice;
 
     while (true) {
-
         cout << "\n========== Logic Simulator ==========\n";
-        cout << "1. Basic AND-OR Circuit\n";
-        cout << "2. Half Adder\n";
-        cout << "3. Full Adder\n";
-        cout << "4. XOR Gate\n";
-        cout << "5. Exit\n";
+        cout << "1. Half Adder\n";
+        cout << "2. Full Adder\n";
+        cout << "3. Ripple Carry Adder\n";
+        cout << "4. Exit\n";
         cout << "Choose option: ";
-
         cin >> choice;
-
-        if (cin.fail()) {
-            cin.clear();
-            cin.ignore(1000, '\n');
-            cout << "Invalid choice. Try again.\n";
-            continue;
-        }
 
         switch (choice) {
             case 1:
-                basicCircuit();
-                break;
-            case 2:
                 halfAdder();
                 break;
-            case 3:
+            case 2:
                 fullAdder();
                 break;
-            case 4:
-                xorGate();
+            case 3:
+                rippleCarryAdder();
                 break;
-            case 5:
+            case 4:
                 cout << "Exiting...\n";
                 return 0;
             default:
